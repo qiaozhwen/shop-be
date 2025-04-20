@@ -41,7 +41,7 @@ jobs:
       # 保存镜像为 tar 文件
       - name: Save Docker image
         run: |
-          docker save -o shop-be-image.tar $IMAGE_NAME:latest
+          docker save -o shopBeImage.tar $IMAGE_NAME:latest
 
       # 传输镜像到服务器
       - name: Transfer image to server
@@ -51,7 +51,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_SSH_PORT || 22 }}
-          source: 'shop-be-image.tar'
+          source: 'shopBeImage.tar'
           target: ${{ env.SERVER_DEPLOY_PATH }}
 
       # 服务器端部署
@@ -66,19 +66,19 @@ jobs:
             cd ${{ env.SERVER_DEPLOY_PATH }}
 
             # 停止并删除旧容器
-            docker stop ${{ env.CONTAINER_NAME }} || true
-            docker rm ${{ env.CONTAINER_NAME }} || true
+            docker stop shop-be:latest || true
+            docker rm shop-be:latest || true
 
             # 加载新镜像
-            docker load -i shop-be-image.tar
+            docker load -i shopBeImage.tar
 
             # 启动新容器
             docker run -d \
-              --name ${{ env.CONTAINER_NAME }} \
+              --name shop-be \
               -p 5000:3000 \
               --restart always \
-              ${{ env.IMAGE_NAME }}:latest
+              shop-be:latest
 
             # 清理临时文件
-            rm -f shop-be-image.tar
+            rm -f shopBeImage.tar
             echo "Deployment completed!"
