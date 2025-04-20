@@ -77,7 +77,7 @@ jobs:
               --name shop-be \
               -p 5000:3000 \
               --restart always \
-              shop-be:latest
+              shop-be
 
             # 清理临时文件
             rm -f shopBeImage.tar
