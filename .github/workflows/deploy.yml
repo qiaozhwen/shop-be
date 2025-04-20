@@ -65,9 +65,10 @@ jobs:
           script: |
             cd ${{ env.SERVER_DEPLOY_PATH }}
 
-            # 停止并删除旧容器
-            docker stop shop-be:latest || true
-            docker rm shop-be:latest || true
+            # 停止并删除旧容器 
+            docker stop shop-be || echo "容器不存在无需停止"
+            docker rm -f shop-be || echo "容器不存在无需删除"
+            docker rmi $(docker images -q shop-be) || echo "镜像不存在无需删除"
 
             # 加载新镜像
             docker load -i shopBeImage.tar
@@ -80,5 +81,6 @@ jobs:
               shop-be
 
             # 清理临时文件
+            docker image prune -af
             rm -f shopBeImage.tar
             echo "Deployment completed!"
