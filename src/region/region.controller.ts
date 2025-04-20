@@ -24,21 +24,21 @@ export class RegionController {
     return this.regionService.findOne(+id);
   }
 
-  @Post()
-  create(@Body() region: Partial<Region>): Promise<Region> {
-    return this.regionService.create(region);
-  }
+  // @Post()
+  // create(@Body() region: Partial<Region>): Promise<Region> {
+  //   return this.regionService.create(region);
+  // }
 
-  @Put(':id')
-  update(
-    @Param('id') id: string,
-    @Body() region: Partial<Region>,
-  ): Promise<Region> {
-    return this.regionService.update(+id, region);
-  }
+  // @Put(':id')
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() region: Partial<Region>,
+  // ): Promise<Region> {
+  //   return this.regionService.update(+id, region);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string): Promise<void> {
-    return this.regionService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string): Promise<void> {
+  //   return this.regionService.remove(+id);
+  // }
 }

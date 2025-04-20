@@ -20,7 +20,12 @@ export class EmployeeService {
   }
 
   async findOne(id: number): Promise<Employee> {
-    return await this.employeeRepository.findOne({ where: { id } });
+    const employee = await this.employeeRepository.findOne({ where: { id } });
+    if (!employee) {
+      // 如果未找到员工记录，抛出异常
+      throw new Error(`未找到ID为 ${id} 的员工记录`);
+    }
+    return employee;
   }
 
   async update(id: number, employee: Partial<Employee>): Promise<Employee> {

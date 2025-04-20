@@ -24,29 +24,29 @@ export class InventoryController {
     return this.inventoryService.findOne(+id);
   }
 
-  @Post()
-  create(@Body() inventory: Partial<Inventory>): Promise<Inventory> {
-    return this.inventoryService.create(inventory);
-  }
+  // @Post()
+  // create(@Body() inventory: Partial<Inventory>): Promise<Inventory> {
+  //   return this.inventoryService.create(inventory);
+  // }
 
-  @Put(':id')
-  update(
-    @Param('id') id: string,
-    @Body() inventory: Partial<Inventory>,
-  ): Promise<Inventory> {
-    return this.inventoryService.update(+id, inventory);
-  }
+  // @Put(':id')
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() inventory: Partial<Inventory>,
+  // ): Promise<Inventory> {
+  //   return this.inventoryService.update(+id, inventory);
+  // }
 
-  @Put(':id/quantity')
-  updateQuantity(
-    @Param('id') id: string,
-    @Body('quantity') quantity: number,
-  ): Promise<Inventory> {
-    return this.inventoryService.updateQuantity(+id, quantity);
-  }
+  // @Put(':id/quantity')
+  // updateQuantity(
+  //   @Param('id') id: string,
+  //   @Body('quantity') quantity: number,
+  // ): Promise<Inventory> {
+  //   return this.inventoryService.updateQuantity(+id, quantity);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string): Promise<void> {
-    return this.inventoryService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string): Promise<void> {
+  //   return this.inventoryService.remove(+id);
+  // }
 }

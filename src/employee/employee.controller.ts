@@ -14,10 +14,10 @@ import { Employee } from './employee.entity';
 export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}
 
-  @Post()
-  async create(@Body() employee: Partial<Employee>): Promise<Employee> {
-    return await this.employeeService.create(employee);
-  }
+  // @Post()
+  // async create(@Body() employee: Partial<Employee>): Promise<Employee> {
+  //   return await this.employeeService.create(employee);
+  // }
 
   @Get()
   async findAll(): Promise<Employee[]> {
@@ -29,16 +29,16 @@ export class EmployeeController {
     return await this.employeeService.findOne(id);
   }
 
-  @Put(':id')
-  async update(
-    @Param('id') id: number,
-    @Body() employee: Partial<Employee>,
-  ): Promise<Employee> {
-    return await this.employeeService.update(id, employee);
-  }
+  // @Put(':id')
+  // async update(
+  //   @Param('id') id: number,
+  //   @Body() employee: Partial<Employee>,
+  // ): Promise<Employee> {
+  //   return await this.employeeService.update(id, employee);
+  // }
 
-  @Delete(':id')
-  async remove(@Param('id') id: number): Promise<void> {
-    return await this.employeeService.remove(id);
-  }
+  // @Delete(':id')
+  // async remove(@Param('id') id: number): Promise<void> {
+  //   return await this.employeeService.remove(id);
+  // }
 }

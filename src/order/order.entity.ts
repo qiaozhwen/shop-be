@@ -9,25 +9,6 @@ import {
 import { Product } from '../product/product.entity';
 
 @Entity()
-export class OrderItem {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column()
-  quantity: number;
-
-  @Column('decimal', { precision: 10, scale: 2 })
-  price: number;
-
-  @ManyToOne(() => Product)
-  @JoinColumn()
-  product: Product;
-
-  @Column()
-  productId: number;
-}
-
-@Entity()
 export class Order {
   @PrimaryGeneratedColumn()
   id: number;
@@ -45,7 +26,10 @@ export class Order {
   })
   status: string;
 
-  @OneToMany(() => OrderItem, (item) => item.order, { cascade: true, eager: true })
+  @OneToMany(() => OrderItem, (item) => item.order, {
+    cascade: true,
+    eager: true,
+  })
   @JoinColumn()
   items: OrderItem[];
 
@@ -58,4 +42,25 @@ export class Order {
     onUpdate: 'CURRENT_TIMESTAMP',
   })
   updatedAt: Date;
+}
+@Entity()
+export class OrderItem {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  quantity: number;
+
+  @Column('decimal', { precision: 10, scale: 2 })
+  price: number;
+
+  @ManyToOne(() => Product)
+  @JoinColumn()
+  product: Product;
+
+  @Column()
+  productId: number;
+
+  @ManyToOne(() => Order, (order) => order.items)
+  order: Order;
 }

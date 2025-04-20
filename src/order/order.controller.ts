@@ -24,29 +24,29 @@ export class OrderController {
     return this.orderService.findOne(+id);
   }
 
-  @Post()
-  create(@Body() order: Partial<Order>): Promise<Order> {
-    return this.orderService.create(order);
-  }
+  // @Post()
+  // create(@Body() order: Partial<Order>): Promise<Order> {
+  //   return this.orderService.create(order);
+  // }
 
-  @Put(':id')
-  update(
-    @Param('id') id: string,
-    @Body() order: Partial<Order>,
-  ): Promise<Order> {
-    return this.orderService.update(+id, order);
-  }
+  // @Put(':id')
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() order: Partial<Order>,
+  // ): Promise<Order> {
+  //   return this.orderService.update(+id, order);
+  // }
 
-  @Put(':id/status')
-  updateStatus(
-    @Param('id') id: string,
-    @Body('status') status: string,
-  ): Promise<Order> {
-    return this.orderService.updateStatus(+id, status);
-  }
+  // @Put(':id/status')
+  // updateStatus(
+  //   @Param('id') id: string,
+  //   @Body('status') status: string,
+  // ): Promise<Order> {
+  //   return this.orderService.updateStatus(+id, status);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string): Promise<void> {
-    return this.orderService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string): Promise<void> {
+  //   return this.orderService.remove(+id);
+  // }
 }

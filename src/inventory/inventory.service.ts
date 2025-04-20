@@ -15,7 +15,11 @@ export class InventoryService {
   }
 
   async findOne(id: number): Promise<Inventory> {
-    return this.inventoryRepository.findOne({ where: { id } });
+    const inventory = await this.inventoryRepository.findOne({ where: { id } });
+    if (!inventory) {
+      throw new Error('找不到库存记录');
+    }
+    return inventory;
   }
 
   async create(inventory: Partial<Inventory>): Promise<Inventory> {
@@ -25,7 +29,11 @@ export class InventoryService {
 
   async update(id: number, inventory: Partial<Inventory>): Promise<Inventory> {
     await this.inventoryRepository.update(id, inventory);
-    return this.inventoryRepository.findOne({ where: { id } });
+    const updatedInventory = await this.inventoryRepository.findOne({ where: { id } });
+    if (!updatedInventory) {
+      throw new Error('找不到库存记录');
+    }
+    return updatedInventory;
   }
 
   async updateQuantity(id: number, quantity: number): Promise<Inventory> {
@@ -35,7 +43,7 @@ export class InventoryService {
       inventory.lowStockAlert = quantity <= inventory.minQuantity;
       return this.inventoryRepository.save(inventory);
     }
-    return null;
+    throw new Error('找不到库存记录');
   }
 
   async remove(id: number): Promise<void> {

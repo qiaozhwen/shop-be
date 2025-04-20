@@ -24,21 +24,21 @@ export class ProductController {
     return this.productService.findOne(+id);
   }
 
-  @Post()
-  create(@Body() product: Partial<Product>): Promise<Product> {
-    return this.productService.create(product);
-  }
+  // @Post()
+  // create(@Body() product: Partial<Product>): Promise<Product> {
+  //   return this.productService.create(product);
+  // }
 
-  @Put(':id')
-  update(
-    @Param('id') id: string,
-    @Body() product: Partial<Product>,
-  ): Promise<Product> {
-    return this.productService.update(+id, product);
-  }
+  // @Put(':id')
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() product: Partial<Product>,
+  // ): Promise<Product> {
+  //   return this.productService.update(+id, product);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string): Promise<void> {
-    return this.productService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string): Promise<void> {
+  //   return this.productService.remove(+id);
+  // }
 }
