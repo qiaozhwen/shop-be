@@ -14,10 +14,10 @@ import { Store } from './store.entity';
 export class StoreController {
   constructor(private readonly storeService: StoreService) {}
 
-  @Post()
-  async create(@Body() store: Partial<Store>): Promise<Store> {
-    return await this.storeService.create(store);
-  }
+  // @Post()
+  // async create(@Body() store: Partial<Store>): Promise<Store> {
+  //   return await this.storeService.create(store);
+  // }
 
   @Get()
   async findAll(): Promise<Store[]> {
@@ -29,16 +29,16 @@ export class StoreController {
     return await this.storeService.findOne(id);
   }
 
-  @Put(':id')
-  async update(
-    @Param('id') id: number,
-    @Body() store: Partial<Store>,
-  ): Promise<Store> {
-    return await this.storeService.update(id, store);
-  }
+  // @Put(':id')
+  // async update(
+  //   @Param('id') id: number,
+  //   @Body() store: Partial<Store>,
+  // ): Promise<Store> {
+  //   return await this.storeService.update(id, store);
+  // }
 
-  @Delete(':id')
-  async remove(@Param('id') id: number): Promise<void> {
-    return await this.storeService.remove(id);
-  }
+  // @Delete(':id')
+  // async remove(@Param('id') id: number): Promise<void> {
+  //   return await this.storeService.remove(id);
+  // }
 }
