@@ -8,6 +8,9 @@ import { RegionModule } from './region/region.module';
 import { ProductModule } from './product/product.module';
 import { OrderModule } from './order/order.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { UserModule } from './user/user.module';
+import { RoleModule } from './role/role.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -27,6 +30,9 @@ import { InventoryModule } from './inventory/inventory.module';
     ProductModule,
     OrderModule,
     InventoryModule,
+    UserModule,
+    RoleModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
