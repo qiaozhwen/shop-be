@@ -13,7 +13,7 @@ import { CreateHistoricalAmountDto } from './dto/create-historical-amount.dto';
 import { UpdateHistoricalAmountDto } from './dto/update-historical-amount.dto';
 import { JwtAuthGuard } from 'src/auth/local-auth.guard';
 
-@Controller('historical-amount')
+@Controller('historicalAmount')
 @UseGuards(JwtAuthGuard) // 对整个控制器应用认证守卫
 export class HistoricalAmountController {
   constructor(
