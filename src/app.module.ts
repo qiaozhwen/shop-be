@@ -12,6 +12,7 @@ import { UserModule } from './user/user.module';
 import { RoleModule } from './role/role.module';
 import { AuthModule } from './auth/auth.module';
 import { HistoricalAmountModule } from './historical-amount/historical-amount.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
