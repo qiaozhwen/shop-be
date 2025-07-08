@@ -11,9 +11,13 @@ import { InventoryModule } from './inventory/inventory.module';
 import { UserModule } from './user/user.module';
 import { RoleModule } from './role/role.module';
 import { AuthModule } from './auth/auth.module';
+import { HistoricalAmountModule } from './historical-amount/historical-amount.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: '106.14.227.122',
@@ -32,6 +36,7 @@ import { AuthModule } from './auth/auth.module';
     InventoryModule,
     UserModule,
     RoleModule,
+    HistoricalAmountModule, // 添加这行
     AuthModule,
   ],
   controllers: [AppController],
