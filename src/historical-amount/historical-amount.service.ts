@@ -13,11 +13,14 @@ export class HistoricalAmountService {
   ) {}
 
   create(createHistoricalAmountDto: CreateHistoricalAmountDto) {
-    const newAmount = this.historicalAmountRepository.create(createHistoricalAmountDto);
+    const newAmount = this.historicalAmountRepository.create(
+      createHistoricalAmountDto,
+    );
     return this.historicalAmountRepository.save(newAmount);
   }
 
   findAll() {
+    console.log('findall');
     return this.historicalAmountRepository.find();
   }
 
@@ -25,7 +28,10 @@ export class HistoricalAmountService {
     return this.historicalAmountRepository.findOneBy({ id });
   }
 
-  async update(id: number, updateHistoricalAmountDto: UpdateHistoricalAmountDto) {
+  async update(
+    id: number,
+    updateHistoricalAmountDto: UpdateHistoricalAmountDto,
+  ) {
     await this.historicalAmountRepository.update(id, updateHistoricalAmountDto);
     return this.findOne(id);
   }
