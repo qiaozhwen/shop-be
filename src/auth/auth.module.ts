@@ -12,8 +12,8 @@ import { LocalStrategy } from './local.strategy';
     UserModule,
     PassportModule,
     JwtModule.register({
-      secret: 'otcKyo', // 在生产环境中应该使用环境变量
-      signOptions: { expiresIn: '1d' },
+      secret: `${process.env.JWT_SECRET}`,
+      signOptions: { expiresIn: `1d` },
     }),
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy],

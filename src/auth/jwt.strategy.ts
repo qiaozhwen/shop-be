@@ -8,7 +8,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: 'your-secret-key', // 在生产环境中应该使用环境变量
+      secretOrKey: `${process.env.JWT_SECRET_KEY}`, // 在生产环境中应该使用环境变量
     });
   }
 
