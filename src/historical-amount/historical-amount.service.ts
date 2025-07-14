@@ -36,7 +36,7 @@ export class HistoricalAmountService {
     return this.findOne(id);
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return this.historicalAmountRepository.delete(id);
   }
 

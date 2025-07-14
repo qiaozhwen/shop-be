@@ -45,6 +45,6 @@ export class HistoricalAmountController {
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.historicalAmountService.remove(+id);
+    return this.historicalAmountService.remove(id);
   }
 }
