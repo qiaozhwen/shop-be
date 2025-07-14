@@ -24,7 +24,7 @@ export class HistoricalAmountService {
     return this.historicalAmountRepository.find();
   }
 
-  findOne(id: number) {
+  findOne(id: any) {
     return this.historicalAmountRepository.findOneBy({ id });
   }
 

@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('historical_amount')
 export class HistoricalAmount {
@@ -8,7 +14,7 @@ export class HistoricalAmount {
   @Column({ type: 'date', unique: true })
   date: string;
 
-  @Column({ type: 'simple-json', default: [] })
+  @Column({ type: 'json' })
   amounts: number[];
 
   @CreateDateColumn({ name: 'created_at' })
