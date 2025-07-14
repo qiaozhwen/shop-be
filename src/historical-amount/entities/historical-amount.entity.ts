@@ -2,14 +2,14 @@ import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateCol
 
 @Entity('historical_amount')
 export class HistoricalAmount {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column({ type: 'date' })
+  @Column({ type: 'date', unique: true })
   date: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  amount: number;
+  @Column({ type: 'simple-json', default: [] })
+  amounts: number[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
