@@ -12,12 +12,12 @@ export class HistoricalAmountService {
     private historicalAmountRepository: Repository<HistoricalAmount>,
   ) {}
 
-  create(createHistoricalAmountDto: CreateHistoricalAmountDto) {
-    const newAmount = this.historicalAmountRepository.create(
-      createHistoricalAmountDto,
-    );
-    return this.historicalAmountRepository.save(newAmount);
-  }
+  // create(createHistoricalAmountDto: CreateHistoricalAmountDto) {
+  //   const newAmount = this.historicalAmountRepository.create(
+  //     createHistoricalAmountDto,
+  //   );
+  //   return this.historicalAmountRepository.save(newAmount);
+  // }
 
   findAll() {
     console.log('findall');
@@ -38,5 +38,23 @@ export class HistoricalAmountService {
 
   remove(id: number) {
     return this.historicalAmountRepository.delete(id);
+  }
+
+  async create(createDto: CreateHistoricalAmountDto) {
+    const dataToCreate = {
+      date: createDto.date,
+      amounts: createDto.amounts || [],
+    };
+
+    const existing = await this.historicalAmountRepository.findOne({
+      where: { date: createDto.date },
+    });
+
+    if (existing) {
+      existing.amounts.push(...dataToCreate.amounts);
+      return this.historicalAmountRepository.save(existing);
+    }
+
+    return this.historicalAmountRepository.save(dataToCreate);
   }
 }

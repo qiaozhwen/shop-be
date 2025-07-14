@@ -1,11 +1,9 @@
-import { IsDateString, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { IsDateString, IsNumber } from 'class-validator';
 
 export class CreateHistoricalAmountDto {
-  @IsOptional()
   @IsDateString()
-  date?: string;
+  date: string;
 
-  @IsNotEmpty()
-  @IsNumber()
-  amount: number;
+  @IsNumber({}, { each: true })
+  amounts: number[];
 }
