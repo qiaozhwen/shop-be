@@ -20,8 +20,11 @@ export class HistoricalAmountService {
   // }
 
   findAll() {
-    console.log('findall');
-    return this.historicalAmountRepository.find();
+    return this.historicalAmountRepository.find({
+      order: {
+        date: 'ASC'
+      }
+    });
   }
 
   findOne(id: any) {
