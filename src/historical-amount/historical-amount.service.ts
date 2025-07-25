@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { CreateHistoricalAmountDto } from './dto/create-historical-amount.dto';
 import { UpdateHistoricalAmountDto } from './dto/update-historical-amount.dto';
 import { HistoricalAmount } from './entities/historical-amount.entity';
+import { error } from 'console';
 
 @Injectable()
 export class HistoricalAmountService {
@@ -22,8 +23,8 @@ export class HistoricalAmountService {
   findAll() {
     return this.historicalAmountRepository.find({
       order: {
-        date: 'ASC'
-      }
+        date: 'ASC',
+      },
     });
   }
 
@@ -31,12 +32,17 @@ export class HistoricalAmountService {
     return this.historicalAmountRepository.findOneBy({ id });
   }
 
-  async update(
-    id: number,
-    updateHistoricalAmountDto: UpdateHistoricalAmountDto,
-  ) {
-    await this.historicalAmountRepository.update(id, updateHistoricalAmountDto);
-    return this.findOne(id);
+  async update(id: string, updateDto: UpdateHistoricalAmountDto) {
+    const entity = await this.historicalAmountRepository.findOne({
+      where: { id },
+    });
+
+    if (!entity) {
+      throw new error('Historical amount not found');
+    }
+
+    Object.assign(entity, updateDto);
+    return this.historicalAmountRepository.save(entity);
   }
 
   remove(id: string) {

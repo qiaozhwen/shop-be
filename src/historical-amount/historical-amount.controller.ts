@@ -32,15 +32,15 @@ export class HistoricalAmountController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.historicalAmountService.findOne(+id);
+    return this.historicalAmountService.findOne(id);
   }
 
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
-    @Body() updateHistoricalAmountDto: UpdateHistoricalAmountDto,
+    @Body() updateHistoricalAmountDto: UpdateHistoricalAmountDto
   ) {
-    return this.historicalAmountService.update(+id, updateHistoricalAmountDto);
+    return this.historicalAmountService.update(id, updateHistoricalAmountDto);
   }
 
   @Delete(':id')
