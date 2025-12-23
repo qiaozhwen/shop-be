@@ -3,50 +3,87 @@ import {
   Get,
   Post,
   Put,
-  Delete,
   Body,
   Param,
+  Query,
+  ParseIntPipe,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
-import { Order } from './order.entity';
+import {
+  CreateOrderDto,
+  QueryOrderDto,
+  PayOrderDto,
+  UpdateOrderDto,
+} from './dto/order.dto';
+import { AuthGuard } from '@nestjs/passport';
 
-@Controller('orders')
+@Controller('order')
+@UseGuards(AuthGuard('jwt'))
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Get()
-  findAll(): Promise<Order[]> {
-    return this.orderService.findAll();
+  findAll(@Query() query: QueryOrderDto) {
+    return this.orderService.findAll(query);
+  }
+
+  @Get('statistics')
+  getStatistics(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.orderService.getStatistics(startDate, endDate);
+  }
+
+  @Get('top-products')
+  getTopProducts(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.orderService.getTopProducts(
+      startDate,
+      endDate,
+      limit ? parseInt(limit) : 10,
+    );
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Order> {
-    return this.orderService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.orderService.findOne(id);
   }
 
-  // @Post()
-  // create(@Body() order: Partial<Order>): Promise<Order> {
-  //   return this.orderService.create(order);
-  // }
+  @Get('no/:orderNo')
+  findByOrderNo(@Param('orderNo') orderNo: string) {
+    return this.orderService.findByOrderNo(orderNo);
+  }
 
-  // @Put(':id')
-  // update(
-  //   @Param('id') id: string,
-  //   @Body() order: Partial<Order>,
-  // ): Promise<Order> {
-  //   return this.orderService.update(+id, order);
-  // }
+  @Post()
+  create(@Body() createOrderDto: CreateOrderDto, @Request() req: any) {
+    return this.orderService.create(createOrderDto, req.user?.id || 1);
+  }
 
-  // @Put(':id/status')
-  // updateStatus(
-  //   @Param('id') id: string,
-  //   @Body('status') status: string,
-  // ): Promise<Order> {
-  //   return this.orderService.updateStatus(+id, status);
-  // }
+  @Put(':id')
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateOrderDto: UpdateOrderDto,
+  ) {
+    return this.orderService.update(id, updateOrderDto);
+  }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string): Promise<void> {
-  //   return this.orderService.remove(+id);
-  // }
+  @Post(':id/pay')
+  pay(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() payDto: PayOrderDto,
+    @Request() req: any,
+  ) {
+    return this.orderService.pay(id, payDto, req.user?.id || 1);
+  }
+
+  @Post(':id/cancel')
+  cancel(@Param('id', ParseIntPipe) id: number) {
+    return this.orderService.cancel(id);
+  }
 }

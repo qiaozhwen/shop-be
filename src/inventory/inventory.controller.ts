@@ -3,50 +3,88 @@ import {
   Get,
   Post,
   Put,
-  Delete,
   Body,
   Param,
+  Query,
+  ParseIntPipe,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
-import { Inventory } from './inventory.entity';
+import {
+  CreateInboundDto,
+  CreateOutboundDto,
+  QueryInboundDto,
+  QueryOutboundDto,
+  UpdateInventoryDto,
+} from './dto/inventory.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('inventory')
+@UseGuards(AuthGuard('jwt'))
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
+  // ========== 库存 ==========
+
   @Get()
-  findAll(): Promise<Inventory[]> {
+  findAll() {
     return this.inventoryService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string): Promise<Inventory> {
-    return this.inventoryService.findOne(+id);
+  @Get('overview')
+  getOverview() {
+    return this.inventoryService.getOverview();
   }
 
-  // @Post()
-  // create(@Body() inventory: Partial<Inventory>): Promise<Inventory> {
-  //   return this.inventoryService.create(inventory);
-  // }
+  @Get('product/:productId')
+  findByProduct(@Param('productId', ParseIntPipe) productId: number) {
+    return this.inventoryService.findByProduct(productId);
+  }
 
-  // @Put(':id')
-  // update(
-  //   @Param('id') id: string,
-  //   @Body() inventory: Partial<Inventory>,
-  // ): Promise<Inventory> {
-  //   return this.inventoryService.update(+id, inventory);
-  // }
+  @Put('product/:productId')
+  updateInventory(
+    @Param('productId', ParseIntPipe) productId: number,
+    @Body() dto: UpdateInventoryDto,
+  ) {
+    return this.inventoryService.updateInventory(productId, dto);
+  }
 
-  // @Put(':id/quantity')
-  // updateQuantity(
-  //   @Param('id') id: string,
-  //   @Body('quantity') quantity: number,
-  // ): Promise<Inventory> {
-  //   return this.inventoryService.updateQuantity(+id, quantity);
-  // }
+  // ========== 入库 ==========
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string): Promise<void> {
-  //   return this.inventoryService.remove(+id);
-  // }
+  @Get('inbound')
+  findInbounds(@Query() query: QueryInboundDto) {
+    return this.inventoryService.findInbounds(query);
+  }
+
+  @Post('inbound')
+  createInbound(@Body() dto: CreateInboundDto, @Request() req: any) {
+    return this.inventoryService.createInbound(dto, req.user?.id || 1);
+  }
+
+  // ========== 出库 ==========
+
+  @Get('outbound')
+  findOutbounds(@Query() query: QueryOutboundDto) {
+    return this.inventoryService.findOutbounds(query);
+  }
+
+  @Post('outbound')
+  createOutbound(@Body() dto: CreateOutboundDto, @Request() req: any) {
+    return this.inventoryService.createOutbound(dto, req.user?.id || 1);
+  }
+
+  // ========== 预警 ==========
+
+  @Get('alert')
+  findAlerts(@Query('handled') handled?: string) {
+    const handledBool =
+      handled === 'true' ? true : handled === 'false' ? false : undefined;
+    return this.inventoryService.findAlerts(handledBool);
+  }
+
+  @Post('alert/:id/handle')
+  handleAlert(@Param('id', ParseIntPipe) id: number, @Request() req: any) {
+    return this.inventoryService.handleAlert(id, req.user?.id || 1);
+  }
 }
