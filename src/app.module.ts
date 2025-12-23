@@ -36,16 +36,16 @@ import { SystemLogModule } from './system-log/system-log.module';
       port: parseInt(process.env.DB_PORT || '3306'),
       username: process.env.DB_USERNAME || 'root',
       password: process.env.DB_PASSWORD || '13524155957Qz@1',
-      database: process.env.DB_DATABASE || 'shop',
+      database: process.env.DB_DATABASE || 'freshbird',
       autoLoadEntities: true,
-      synchronize: process.env.NODE_ENV !== 'production',
+      synchronize: false, // 关闭自动同步，使用 SQL 脚本管理表结构
     }),
     // 系统基础模块
     AuthModule,
     UserModule,
     RoleModule,
     SystemLogModule,
-    
+
     // 业务模块
     CategoryModule,
     ProductModule,
@@ -56,7 +56,7 @@ import { SystemLogModule } from './system-log/system-log.module';
     OrderModule,
     FinanceModule,
     DashboardModule,
-    
+
     // 其他模块
     StoreModule,
     EmployeeModule,
