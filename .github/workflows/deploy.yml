@@ -7,7 +7,7 @@ on:
 env:
   IMAGE_NAME: shop-be
   CONTAINER_NAME: shop-be
-  SERVER_DEPLOY_PATH: /home/deploy # 服务器部署目录
+  SERVER_DEPLOY_PATH: /home/deploy
 
 jobs:
   build-deploy:
@@ -18,20 +18,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Node.js 环境
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      # Python 环境
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          node-version: 18
-          cache: 'npm'
+          python-version: '3.11'
+          cache: 'pip'
 
-      # 安装pnpm
+      # 安装依赖 (用于验证)
       - name: Install dependencies
-        run: npm install -f
-
-      # 项目构建
-      - name: Build project
-        run: npm run build
+        run: pip install -r requirements.txt
 
       # Docker 镜像构建
       - name: Build Docker image
@@ -77,6 +73,11 @@ jobs:
             docker run -d \
               --name shop-be \
               -p 5000:3000 \
+              -e DB_HOST=${{ secrets.DB_HOST }} \
+              -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
+              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+              -e DB_DATABASE=freshbird \
+              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
               --restart always \
               shop-be
 

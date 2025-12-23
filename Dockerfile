@@ -1,36 +1,23 @@
-# 构建阶段
-FROM node:18-alpine as builder
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# 复制 package.json 和 package-lock.json
-COPY package*.json ./
+# 安装系统依赖
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# 安装依赖
-RUN npm ci
+# 复制依赖文件
+COPY requirements.txt .
 
-# 复制源代码
+# 安装 Python 依赖
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 复制应用代码
 COPY . .
-
-# 构建应用
-RUN npm run build
-
-# 运行阶段
-FROM node:18-alpine
-
-WORKDIR /app
-
-# 复制 package.json 和 package-lock.json
-COPY package*.json ./
-
-# 只安装生产环境依赖
-RUN npm ci --only=production
-
-# 从构建阶段复制编译后的代码
-COPY --from=builder /app/dist ./dist
 
 # 暴露端口
 EXPOSE 3000
 
-# 启动应用
-CMD ["npm", "run", "start:prod"]
+# 启动命令
+CMD ["gunicorn", "--bind", "0.0.0.0:3000", "--workers", "2", "run:app"]
