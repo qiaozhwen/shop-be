@@ -1,36 +1,46 @@
-import { Role } from 'src/role/role.entity';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('user')
+@Entity('staff')
 export class User {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
   @Column({ length: 50, unique: true })
   username: string;
 
-  @Column({ length: 100 })
+  @Column({ length: 255 })
   password: string;
 
-  @Column({ length: 20, nullable: true })
-  phone_number: string;
-
-  @Column({ length: 100 })
+  @Column({ length: 50 })
   name: string;
 
-  @Column({ default: true })
-  isActive: boolean;
+  @Column({ length: 20, nullable: true })
+  phone: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ length: 255, nullable: true })
+  avatar: string;
+
+  @Column({
+    type: 'enum',
+    enum: ['admin', 'manager', 'cashier', 'warehouse'],
+    default: 'cashier',
+  })
+  role: string;
+
+  @Column({ type: 'tinyint', default: 1 })
+  status: number;
+
+  @Column({ name: 'last_login_at', type: 'datetime', nullable: true })
+  lastLoginAt: Date;
+
+  @Column({ name: 'created_at', type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
   @Column({
-    type: 'timestamp',
+    name: 'updated_at',
+    type: 'datetime',
     default: () => 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
   updatedAt: Date;
-
-  @ManyToOne(() => Role, (role) => role.code)
-  roleCode: string;
 }
