@@ -27,7 +27,7 @@ import { ConfigModule } from '@nestjs/config';
       password: '13524155957Qz@1',
       database: 'shop',
       autoLoadEntities: true,
-      synchronize: true,
+      synchronize: false,
     }),
     StoreModule,
     EmployeeModule,
