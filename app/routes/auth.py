@@ -20,7 +20,9 @@ def login():
         return jsonify({'code': 400, 'message': '用户名和密码不能为空'}), 400
 
     # 查找用户
+    print(f'1111111: {data}')
     staff = Staff.query.filter_by(username=username).first()
+    print(f'2222222: {staff}')
     if not staff:
         return jsonify({'code': 401, 'message': '用户名或密码错误'}), 401
 
@@ -31,7 +33,6 @@ def login():
     # 检查状态
     if staff.status != 1:
         return jsonify({'code': 403, 'message': '账号已被禁用'}), 403
-
     # 更新最后登录时间
     staff.last_login_at = datetime.now()
     db.session.commit()
