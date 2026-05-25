@@ -59,12 +59,10 @@ jobs:
             docker pull ${{ steps.meta.outputs.latest_tag }}
             docker stop ${{ env.CONTAINER_NAME }} 2>/dev/null || true
             docker rm -f ${{ env.CONTAINER_NAME }} 2>/dev/null || true
-            docker network create shop-net 2>/dev/null || true
             echo "==> starting new container"
             docker run -d \
               --name ${{ env.CONTAINER_NAME }} \
               --restart unless-stopped \
-              --network shop-net \
               -p ${{ env.HOST_PORT }}:8080 \
               -e DB_URL="${{ secrets.DB_URL }}" \
               -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
