@@ -57,7 +57,9 @@ jobs:
             set -e
             echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ secrets.REGISTRY }} -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
             docker pull ${{ steps.meta.outputs.latest_tag }}
+            docker stop ${{ env.CONTAINER_NAME }} 2>/dev/null || true
             docker rm -f ${{ env.CONTAINER_NAME }} 2>/dev/null || true
+            echo "==> starting new container"
             docker run -d \
               --name ${{ env.CONTAINER_NAME }} \
               --restart unless-stopped \
