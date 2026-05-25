@@ -1,0 +1,2 @@
+-- 为 stores 表添加 updated_at 字段
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;

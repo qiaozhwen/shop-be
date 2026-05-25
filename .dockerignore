@@ -1,0 +1,13 @@
+.gradle
+build
+.idea
+.vscode
+.git
+.github
+.superpowers
+docs
+*.md
+*.sql
+.env
+Dockerfile
+docker-compose.yml
