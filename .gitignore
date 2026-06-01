@@ -19,3 +19,5 @@ build/
 
 # Brainstorm artifacts
 .superpowers/
+
+.worktrees/
