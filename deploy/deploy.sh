@@ -42,10 +42,10 @@ docker run -d \
   --restart unless-stopped \
   --network shop-net \
   -p "${HOST_PORT}:8080" \
-  -e DB_URL="${DB_URL:-jdbc:postgresql://postgres:5432/postgres?currentSchema=shop}" \
-  -e DB_USERNAME="${DB_USERNAME:-qiaozhen}" \
-  -e DB_PASSWORD="${DB_PASSWORD:-postgres}" \
-  -e AUTH_JWT_SECRET="${AUTH_JWT_SECRET:-}" \
+  -e DB_URL="${DB_URL:?DB_URL required}" \
+  -e DB_USERNAME="${DB_USERNAME:?DB_USERNAME required}" \
+  -e DB_PASSWORD="${DB_PASSWORD:?DB_PASSWORD required}" \
+  -e AUTH_JWT_SECRET="${AUTH_JWT_SECRET:?AUTH_JWT_SECRET required}" \
   -e SPRING_PROFILES_ACTIVE=prod \
   "${IMAGE}"
 
