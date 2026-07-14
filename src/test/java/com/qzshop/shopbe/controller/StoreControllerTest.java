@@ -42,10 +42,12 @@ class StoreControllerTest {
 
         mockMvc.perform(get("/api/stores"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].name").value("虹口店"))
-                .andExpect(jsonPath("$[0].status").value("OPEN"));
+            .andExpect(jsonPath("$.code").value(200))
+            .andExpect(jsonPath("$.data.total").value(1))
+            .andExpect(jsonPath("$.data.list", hasSize(1)))
+            .andExpect(jsonPath("$.data.list[0].id").value(1))
+            .andExpect(jsonPath("$.data.list[0].name").value("虹口店"))
+            .andExpect(jsonPath("$.data.list[0].status").value("OPEN"));
     }
 
     @Test
@@ -59,22 +61,28 @@ class StoreControllerTest {
 
     @Test
     void createStoreReturnsCreatedStoreWithId() throws Exception {
-        StoreEntity created = store(10L, "徐汇店", "OPEN");
-        storeService.createdStore = created;
-
         mockMvc.perform(post("/api/stores")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
+                                  "code": "XH001",
                                   "name": "徐汇店",
                                   "address": "漕溪北路 1 号",
-                                  "phone": "021-10000000"
+                                  "phone": "021-10000000",
+                                  "openTime": "07:30",
+                                  "closeTime": "19:45",
+                                  "remark": "靠近地铁口"
                                 }
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(10))
                 .andExpect(jsonPath("$.name").value("徐汇店"))
-                .andExpect(jsonPath("$.status").value("OPEN"));
+                .andExpect(jsonPath("$.status").value("OPEN"))
+                .andExpect(jsonPath("$.openTime").value("07:30"))
+                .andExpect(jsonPath("$.closeTime").value("19:45"));
+
+        assertThat(storeService.createdRequest.getOpeningTime().toString()).isEqualTo("07:30");
+        assertThat(storeService.createdRequest.getClosingTime().toString()).isEqualTo("19:45");
     }
 
     @Test
@@ -158,7 +166,8 @@ class StoreControllerTest {
         storeService.closeResult = true;
 
         mockMvc.perform(delete("/api/stores/5"))
-                .andExpect(status().isNoContent());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(200));
 
         assertThat(storeService.closedStoreId).isEqualTo(5L);
     }
@@ -183,7 +192,7 @@ class StoreControllerTest {
     private static class FakeStoreService extends StoreService {
         private List<StoreEntity> allStores = List.of();
         private Optional<StoreEntity> storeById = Optional.empty();
-        private StoreEntity createdStore;
+        private StoreRequest createdRequest;
         private Optional<StoreEntity> updatedStore = Optional.empty();
         private boolean closeResult;
         private Long closedStoreId;
@@ -204,7 +213,17 @@ class StoreControllerTest {
 
         @Override
         public StoreEntity createStore(StoreRequest request) {
-            return createdStore;
+            createdRequest = request;
+            StoreEntity created = new StoreEntity();
+            created.setId(10L);
+            created.setName(request.getName());
+            created.setAddress(request.getAddress());
+            created.setPhone(request.getPhone());
+            created.setOwnerName(request.getOwnerName());
+            created.setStatus(request.getStatus() == null ? "OPEN" : request.getStatus());
+            created.setOpeningTime(request.getOpeningTime());
+            created.setClosingTime(request.getClosingTime());
+            return created;
         }
 
         @Override

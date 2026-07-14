@@ -55,6 +55,8 @@ class StoreServiceTest {
         request.setName("徐汇店");
         request.setAddress("漕溪北路 1 号");
         request.setPhone("021-10000000");
+        request.setCode("XH001");
+        request.setRemark("靠近地铁口");
         StoreEntity saved = store(10L, "徐汇店", "OPEN");
         when(storeRepository.save(any(StoreEntity.class))).thenReturn(saved);
 
@@ -66,6 +68,8 @@ class StoreServiceTest {
         assertThat(toSave.getName()).isEqualTo("徐汇店");
         assertThat(toSave.getAddress()).isEqualTo("漕溪北路 1 号");
         assertThat(toSave.getPhone()).isEqualTo("021-10000000");
+        assertThat(toSave).extracting("code").isEqualTo("XH001");
+        assertThat(toSave).extracting("remark").isEqualTo("靠近地铁口");
         assertThat(toSave.getStatus()).isEqualTo("OPEN");
         assertThat(result).isSameAs(saved);
     }
@@ -81,6 +85,8 @@ class StoreServiceTest {
         StoreRequest request = new StoreRequest();
         request.setName("新店名");
         request.setClosingTime(LocalTime.of(20, 30));
+        request.setCode("JA002");
+        request.setRemark("晚市门店");
         when(storeRepository.findById(2L)).thenReturn(Optional.of(existing));
         when(storeRepository.save(existing)).thenReturn(existing);
 
@@ -93,6 +99,8 @@ class StoreServiceTest {
         assertThat(existing.getOwnerName()).isEqualTo("老店主");
         assertThat(existing.getOpeningTime()).isEqualTo(LocalTime.of(6, 0));
         assertThat(existing.getClosingTime()).isEqualTo(LocalTime.of(20, 30));
+        assertThat(existing).extracting("code").isEqualTo("JA002");
+        assertThat(existing).extracting("remark").isEqualTo("晚市门店");
         verify(storeRepository).save(existing);
     }
 

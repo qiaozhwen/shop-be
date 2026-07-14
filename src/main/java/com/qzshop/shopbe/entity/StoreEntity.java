@@ -26,6 +26,9 @@ public class StoreEntity {
     @Column(name = "name")
     private String name;
 
+    @Column(name = "code", unique = true, length = 50)
+    private String code;
+
     @Column(name = "address")
     private String address;
 
@@ -37,6 +40,9 @@ public class StoreEntity {
 
     @Column(name = "status")
     private String status;
+
+    @Column(name = "remark", length = 500)
+    private String remark;
 
     @Column(name = "opening_time")
     private LocalTime openingTime;

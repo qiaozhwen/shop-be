@@ -2,6 +2,8 @@ package com.qzshop.shopbe.dto;
 
 import java.time.LocalTime;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
@@ -15,6 +17,10 @@ public class StoreRequest {
     private String phone;
     private String ownerName;
     private String status;
+    private String code;
+    private String remark;
+    @JsonAlias("openTime")
     private LocalTime openingTime;
+    @JsonAlias("closeTime")
     private LocalTime closingTime;
 }

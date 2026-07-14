@@ -31,10 +31,12 @@ public class StoreService {
     public StoreEntity createStore(StoreRequest request) {
         StoreEntity store = new StoreEntity();
         store.setName(request.getName());
+        store.setCode(request.getCode());
         store.setAddress(request.getAddress());
         store.setPhone(request.getPhone());
         store.setOwnerName(request.getOwnerName());
         store.setStatus(request.getStatus() == null ? OPEN_STATUS : request.getStatus());
+        store.setRemark(request.getRemark());
         store.setOpeningTime(request.getOpeningTime());
         store.setClosingTime(request.getClosingTime());
         return storeRepository.save(store);
@@ -44,6 +46,9 @@ public class StoreService {
         return storeRepository.findById(id).map(store -> {
             if (request.getName() != null) {
                 store.setName(request.getName());
+            }
+            if (request.getCode() != null) {
+                store.setCode(request.getCode());
             }
             if (request.getAddress() != null) {
                 store.setAddress(request.getAddress());
@@ -56,6 +61,9 @@ public class StoreService {
             }
             if (request.getStatus() != null) {
                 store.setStatus(request.getStatus());
+            }
+            if (request.getRemark() != null) {
+                store.setRemark(request.getRemark());
             }
             if (request.getOpeningTime() != null) {
                 store.setOpeningTime(request.getOpeningTime());
