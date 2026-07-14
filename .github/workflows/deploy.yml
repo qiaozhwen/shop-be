@@ -70,6 +70,8 @@ jobs:
               -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
               -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
               -e AUTH_JWT_SECRET="${{ secrets.AUTH_JWT_SECRET }}" \
+              -e BOOTSTRAP_ADMIN_PHONE="${{ secrets.BOOTSTRAP_ADMIN_PHONE }}" \
+              -e BOOTSTRAP_ADMIN_PASSWORD="${{ secrets.BOOTSTRAP_ADMIN_PASSWORD }}" \
               -e SPRING_PROFILES_ACTIVE=prod \
               ${{ steps.meta.outputs.latest_tag }}
             docker image prune -f

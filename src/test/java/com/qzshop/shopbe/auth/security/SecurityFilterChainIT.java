@@ -4,6 +4,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +41,13 @@ class SecurityFilterChainIT {
     @Test
     void businessEndpointWithoutTokenIs401() throws Exception {
         mvc().perform(get("/api/stores")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void healthEndpointIsPublicAndReportsUp() throws Exception {
+        mvc().perform(get("/health"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("UP"));
     }
 
     @Test
