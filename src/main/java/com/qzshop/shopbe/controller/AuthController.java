@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -104,6 +105,19 @@ public class AuthController {
         staffRepo.save(staff);
         tokenService.revokeAllForStaff(staff.getId());
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping({"/sms/send", "/sms/login", "/reset-password", "/bind-phone"})
+    public ResponseEntity<Map<String, String>> unsupportedSecondaryAuthentication() {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
+                .body(Map.of("message", "当前版本未启用短信或第三方登录"));
+    }
+
+    @PostMapping("/sso/{provider}/{action}")
+    public ResponseEntity<Map<String, String>> unsupportedSso(@PathVariable String provider,
+                                                               @PathVariable String action) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
+                .body(Map.of("message", "当前版本未启用短信或第三方登录"));
     }
 
     @PostMapping("/logout")

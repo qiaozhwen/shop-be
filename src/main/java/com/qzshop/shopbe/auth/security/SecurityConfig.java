@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -53,7 +54,9 @@ public class SecurityConfig {
     @Bean @Order(1)
     SecurityFilterChain publicChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/api/auth/refresh", "/api/admin/auth/login")
+            .securityMatcher("/api/auth/refresh", "/api/admin/auth/login",
+                             "/api/admin/auth/sms/**", "/api/admin/auth/sso/**",
+                             "/api/admin/auth/reset-password", "/api/admin/auth/bind-phone")
             .cors(c -> c.configurationSource(corsConfigurationSource()))
             .csrf(c -> c.disable())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -71,12 +74,13 @@ public class SecurityConfig {
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
             .exceptionHandling(e -> e.authenticationEntryPoint(entryPoint).accessDeniedHandler(deniedHandler))
             .authorizeHttpRequests(a -> a
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().hasAuthority("TYPE_STAFF"));
         return http.build();
     }
 
     @Bean @Order(99)
-    SecurityFilterChain defaultChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain apiChain(HttpSecurity http) throws Exception {
         http
             .securityMatcher("/api/**")
             .cors(c -> c.configurationSource(corsConfigurationSource()))
@@ -84,7 +88,18 @@ public class SecurityConfig {
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
             .exceptionHandling(e -> e.authenticationEntryPoint(entryPoint).accessDeniedHandler(deniedHandler))
-            .authorizeHttpRequests(a -> a.anyRequest().hasAuthority("TYPE_STAFF"));
+            .authorizeHttpRequests(a -> a
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .anyRequest().hasAuthority("TYPE_STAFF"));
+        return http.build();
+    }
+
+    @Bean @Order(100)
+    SecurityFilterChain defaultChain(HttpSecurity http) throws Exception {
+        http
+            .cors(c -> c.configurationSource(corsConfigurationSource()))
+            .csrf(c -> c.disable())
+            .authorizeHttpRequests(a -> a.anyRequest().permitAll());
         return http.build();
     }
 }

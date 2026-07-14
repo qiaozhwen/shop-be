@@ -107,20 +107,17 @@ class AuthControllerIT {
 
     @Test
     void fakeSmsAndSsoEndpointsCannotIssueTokens() throws Exception {
-        StaffEntity staff = saveStaff("13900000005", "OldPass1", "ACTIVE");
-        String token = jwtService.issueStaff(staff.getId(), java.util.List.of("ADMIN"));
-
         mvc.perform(post("/api/admin/auth/sms/login")
-                .header("Authorization", "Bearer " + token)
                 .contentType(APPLICATION_JSON)
                 .content("{\"phone\":\"13900000005\",\"code\":\"123456\"}"))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isNotImplemented())
+            .andExpect(jsonPath("$.message").value("当前版本未启用短信或第三方登录"));
 
         mvc.perform(post("/api/admin/auth/sso/wechat/exchange")
-                .header("Authorization", "Bearer " + token)
                 .contentType(APPLICATION_JSON)
                 .content("{\"code\":\"MOCK_CODE\",\"state\":\"anything\"}"))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isNotImplemented())
+            .andExpect(jsonPath("$.message").value("当前版本未启用短信或第三方登录"));
     }
 
     @Test

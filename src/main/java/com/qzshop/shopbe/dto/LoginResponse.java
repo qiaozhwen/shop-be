@@ -79,7 +79,7 @@ public class LoginResponse {
         Map<String, Object> subject = new LinkedHashMap<>();
         subject.put("type", "STAFF");
         subject.put("id", id);
-        subject.put("phone", phone == null ? "13800000000" : phone);
+        subject.put("phone", phone == null ? "" : phone);
         subject.put("nickname", nickname == null ? "员工" : nickname);
         subject.put("roles", roles == null || roles.isEmpty() ? List.of("STAFF_DEFAULT") : roles);
         subject.put("hasPassword", hasPassword);
