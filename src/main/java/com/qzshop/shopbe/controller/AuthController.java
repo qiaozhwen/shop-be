@@ -37,6 +37,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final LoginAttemptService loginAttempt;
     private final TokenService tokenService;
+    private final String dummyPasswordHash;
 
     public AuthController(StaffRepository staffRepo,
                           PasswordEncoder passwordEncoder,
@@ -46,14 +47,15 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
         this.loginAttempt = loginAttempt;
         this.tokenService = tokenService;
+        this.dummyPasswordHash = passwordEncoder.encode("timing-only-password");
     }
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest req) {
-        StaffEntity staff = staffRepo.findByPhone(req.getPhone())
-                .orElseThrow(() -> new LoginFailedException("invalid credentials"));
+        StaffEntity staff = staffRepo.findByPhone(req.getPhone()).orElse(null);
 
-        if (!"ACTIVE".equals(staff.getStatus())) {
+        if (staff == null || !"ACTIVE".equals(staff.getStatus())) {
+            passwordEncoder.matches(req.getPassword(), dummyPasswordHash);
             throw new LoginFailedException("invalid credentials");
         }
 
@@ -124,6 +126,12 @@ public class AuthController {
     public ResponseEntity<Void> logout(@RequestBody(required = false) Map<String, Object> body) {
         if (body != null && body.get("refreshToken") != null) {
             tokenService.revokeOne(String.valueOf(body.get("refreshToken")));
+        } else {
+            StaffPrincipal principal = currentPrincipal();
+            if (principal == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            tokenService.revokeAllForStaff(principal.staffId());
         }
         return ResponseEntity.ok().build();
     }

@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -14,6 +15,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import com.qzshop.shopbe.auth.token.JwtService;
+import com.qzshop.shopbe.auth.staff.StaffEntity;
+import com.qzshop.shopbe.auth.staff.StaffRepository;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -21,6 +24,12 @@ class SecurityFilterChainIT {
 
     @Autowired WebApplicationContext ctx;
     @Autowired JwtService jwt;
+    @Autowired StaffRepository staffRepository;
+
+    @BeforeEach
+    void cleanStaff() {
+        staffRepository.deleteAll();
+    }
 
     private MockMvc mvc() {
         return MockMvcBuilders.webAppContextSetup(ctx)
@@ -35,9 +44,27 @@ class SecurityFilterChainIT {
 
     @Test
     void businessEndpointWithStaffTokenIsAllowed() throws Exception {
-        String token = jwt.issueStaff(1L, java.util.List.of("STAFF_DEFAULT"));
+        StaffEntity staff = saveStaff("ACTIVE");
+        String token = jwt.issueStaff(staff.getId(), java.util.List.of("STAFF_DEFAULT"));
         mvc().perform(get("/api/stores").header("Authorization", "Bearer " + token))
             .andExpect(status().isOk());
+    }
+
+    @Test
+    void disabledStaffAccessTokenIsRejected() throws Exception {
+        StaffEntity staff = saveStaff("DISABLED");
+        String token = jwt.issueStaff(staff.getId(), java.util.List.of("ADMIN"));
+
+        mvc().perform(get("/api/stores").header("Authorization", "Bearer " + token))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void deletedStaffAccessTokenIsRejected() throws Exception {
+        String token = jwt.issueStaff(999999L, java.util.List.of("ADMIN"));
+
+        mvc().perform(get("/api/stores").header("Authorization", "Bearer " + token))
+            .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -65,8 +92,19 @@ class SecurityFilterChainIT {
 
     @Test
     void adminEndpointWithStaffTokenReaches404() throws Exception {
-        String token = jwt.issueStaff(1L, java.util.List.of("STAFF_DEFAULT"));
+        StaffEntity staff = saveStaff("ACTIVE");
+        String token = jwt.issueStaff(staff.getId(), java.util.List.of("STAFF_DEFAULT"));
         mvc().perform(get("/api/admin/anything").header("Authorization", "Bearer " + token))
             .andExpect(status().isNotFound());
+    }
+
+    private StaffEntity saveStaff(String status) {
+        StaffEntity staff = new StaffEntity();
+        staff.setStoreId(1L);
+        staff.setName("安全测试员工");
+        staff.setPhone("139" + System.nanoTime());
+        staff.setRole("ADMIN");
+        staff.setStatus(status);
+        return staffRepository.saveAndFlush(staff);
     }
 }

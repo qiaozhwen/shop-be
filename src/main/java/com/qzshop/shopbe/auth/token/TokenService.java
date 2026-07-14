@@ -49,14 +49,14 @@ public class TokenService {
         );
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = TokenReplayException.class)
     public TokenIssueResult rotate(String refreshToken, List<String> roles) {
         return rotate(refreshToken, ignored -> roles);
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = TokenReplayException.class)
     public TokenIssueResult rotate(String refreshToken, LongFunction<List<String>> rolesResolver) {
-        Optional<RefreshTokenEntity> opt = repo.findByTokenHash(hash(refreshToken));
+        Optional<RefreshTokenEntity> opt = repo.findByTokenHashForUpdate(hash(refreshToken));
         if (opt.isEmpty()) {
             throw new TokenReplayException("refresh token not found");
         }

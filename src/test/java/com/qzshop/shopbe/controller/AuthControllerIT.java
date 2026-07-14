@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qzshop.shopbe.auth.staff.StaffEntity;
 import com.qzshop.shopbe.auth.staff.StaffRepository;
 import com.qzshop.shopbe.auth.token.JwtService;
+import com.qzshop.shopbe.auth.token.RefreshTokenRepository;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -31,12 +32,14 @@ class AuthControllerIT {
     @Autowired StaffRepository staffRepository;
     @Autowired PasswordEncoder passwordEncoder;
     @Autowired JwtService jwtService;
+    @Autowired RefreshTokenRepository refreshTokenRepository;
     @Autowired ObjectMapper objectMapper;
 
     private MockMvc mvc;
 
     @BeforeEach
     void setUp() {
+        refreshTokenRepository.deleteAll();
         staffRepository.deleteAll();
         mvc = MockMvcBuilders.webAppContextSetup(context)
             .apply(org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity())
@@ -140,6 +143,27 @@ class AuthControllerIT {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.roles[0]").value("CASHIER"))
             .andExpect(jsonPath("$.subject.roles[0]").value("CASHIER"));
+    }
+
+    @Test
+    void logoutWithoutBodyRevokesAllRefreshTokensForCurrentStaff() throws Exception {
+        StaffEntity staff = saveStaff("13900000007", "OldPass1", "ACTIVE");
+        String loginJson = mvc.perform(post("/api/admin/auth/login")
+                .contentType(APPLICATION_JSON)
+                .content("{\"phone\":\"13900000007\",\"password\":\"OldPass1\"}"))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+        JsonNode login = objectMapper.readTree(loginJson);
+
+        mvc.perform(post("/api/admin/auth/logout")
+                .header("Authorization", "Bearer " + login.get("accessToken").asText()))
+            .andExpect(status().isOk());
+
+        mvc.perform(post("/api/auth/refresh")
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(
+                    java.util.Map.of("refreshToken", login.get("refreshToken").asText()))))
+            .andExpect(status().isUnauthorized());
     }
 
     private StaffEntity saveStaff(String phone, String password, String status) {

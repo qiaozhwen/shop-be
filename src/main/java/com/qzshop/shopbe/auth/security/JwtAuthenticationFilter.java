@@ -13,6 +13,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.qzshop.shopbe.auth.token.JwtService;
 import com.qzshop.shopbe.auth.token.ParsedToken;
 import com.qzshop.shopbe.auth.token.SubjectType;
+import com.qzshop.shopbe.auth.staff.StaffRepository;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -23,8 +24,12 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwt;
+    private final StaffRepository staffRepository;
 
-    public JwtAuthenticationFilter(JwtService jwt) { this.jwt = jwt; }
+    public JwtAuthenticationFilter(JwtService jwt, StaffRepository staffRepository) {
+        this.jwt = jwt;
+        this.staffRepository = staffRepository;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse resp, FilterChain chain)
@@ -34,13 +39,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 ParsedToken p = jwt.parse(header.substring(7));
                 List<SimpleGrantedAuthority> auths = new ArrayList<>();
-                if (p.type() == SubjectType.STAFF && p.roles() != null) {
-                    for (String r : p.roles()) {
+                List<String> roles = p.roles();
+                if (p.type() == SubjectType.STAFF) {
+                    var staff = staffRepository.findById(p.subjectId())
+                            .filter(row -> "ACTIVE".equals(row.getStatus()))
+                            .orElse(null);
+                    if (staff == null) {
+                        chain.doFilter(req, resp);
+                        return;
+                    }
+                    roles = List.of(staff.getRole());
+                }
+                if (roles != null) {
+                    for (String r : roles) {
                         auths.add(new SimpleGrantedAuthority("ROLE_" + r));
                     }
                 }
                 auths.add(new SimpleGrantedAuthority("TYPE_" + p.type().name()));
-                StaffPrincipal principal = new StaffPrincipal(p.subjectId(), p.roles());
+                StaffPrincipal principal = new StaffPrincipal(p.subjectId(), roles);
                 var auth = new UsernamePasswordAuthenticationToken(principal, null, auths);
                 SecurityContextHolder.getContext().setAuthentication(auth);
             } catch (Exception ignored) {
