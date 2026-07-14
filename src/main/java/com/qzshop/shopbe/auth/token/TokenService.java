@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.LongFunction;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,6 +51,11 @@ public class TokenService {
 
     @Transactional
     public TokenIssueResult rotate(String refreshToken, List<String> roles) {
+        return rotate(refreshToken, ignored -> roles);
+    }
+
+    @Transactional
+    public TokenIssueResult rotate(String refreshToken, LongFunction<List<String>> rolesResolver) {
         Optional<RefreshTokenEntity> opt = repo.findByTokenHash(hash(refreshToken));
         if (opt.isEmpty()) {
             throw new TokenReplayException("refresh token not found");
@@ -64,6 +70,7 @@ public class TokenService {
         }
         row.setRevokedAt(LocalDateTime.now());
         repo.save(row);
+        List<String> roles = rolesResolver.apply(row.getSubjectId());
         return issueForStaff(row.getSubjectId(), roles, row.getDeviceInfo());
     }
 

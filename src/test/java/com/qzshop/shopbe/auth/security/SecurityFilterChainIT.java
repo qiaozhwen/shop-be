@@ -1,6 +1,8 @@
 package com.qzshop.shopbe.auth.security;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
@@ -27,8 +29,25 @@ class SecurityFilterChainIT {
     }
 
     @Test
-    void storesEndpointStillPublic() throws Exception {
-        mvc().perform(get("/api/stores")).andExpect(status().isOk());
+    void businessEndpointWithoutTokenIs401() throws Exception {
+        mvc().perform(get("/api/stores")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void businessEndpointWithStaffTokenIsAllowed() throws Exception {
+        String token = jwt.issueStaff(1L, java.util.List.of("STAFF_DEFAULT"));
+        mvc().perform(get("/api/stores").header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void devFrontendCorsPreflightIsAllowed() throws Exception {
+        mvc().perform(options("/api/admin/auth/login")
+                .header("Origin", "http://127.0.0.1:5174")
+                .header("Access-Control-Request-Method", "POST")
+                .header("Access-Control-Request-Headers", "content-type,authorization"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("Access-Control-Allow-Origin", "http://127.0.0.1:5174"));
     }
 
     @Test
