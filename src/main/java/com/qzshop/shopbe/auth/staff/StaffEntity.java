@@ -1,6 +1,7 @@
 package com.qzshop.shopbe.auth.staff;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -46,6 +47,12 @@ public class StaffEntity {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
+    @Column(name = "hire_date")
+    private LocalDate hireDate;
+
+    @Column(length = 500)
+    private String remark;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -73,4 +80,8 @@ public class StaffEntity {
     public void setLockedUntil(LocalDateTime v) { lockedUntil = v; }
     public LocalDateTime getLastLoginAt() { return lastLoginAt; }
     public void setLastLoginAt(LocalDateTime v) { lastLoginAt = v; }
+    public LocalDate getHireDate() { return hireDate; }
+    public void setHireDate(LocalDate v) { hireDate = v; }
+    public String getRemark() { return remark; }
+    public void setRemark(String v) { remark = v; }
 }

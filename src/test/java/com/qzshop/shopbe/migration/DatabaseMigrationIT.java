@@ -39,6 +39,7 @@ class DatabaseMigrationIT {
                 "STAFF",
                 "REFRESH_TOKENS",
                 "SMS_VERIFICATION_CODES",
+                "OPERATIONAL_STATE",
                 "FLYWAY_SCHEMA_HISTORY");
     }
 
