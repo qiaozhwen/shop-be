@@ -60,8 +60,10 @@ jobs:
             docker stop ${{ env.CONTAINER_NAME }} 2>/dev/null || true
             docker rm -f ${{ env.CONTAINER_NAME }} 2>/dev/null || true
             echo "==> starting new container"
+            docker network inspect shop-network >/dev/null 2>&1 || docker network create shop-network
             docker run -d \
               --name ${{ env.CONTAINER_NAME }} \
+              --network shop-network \
               --restart unless-stopped \
               -p ${{ env.HOST_PORT }}:8080 \
               -e DB_URL="${{ secrets.DB_URL }}" \
