@@ -77,6 +77,19 @@ class AuthControllerIT {
     }
 
     @Test
+    void failedPasswordAttemptIsCommittedWhileCredentialLockIsHeld() throws Exception {
+        StaffEntity staff = saveStaff("13900000012", "OldPass1", "ACTIVE");
+
+        mvc.perform(post("/api/admin/auth/login")
+                .contentType(APPLICATION_JSON)
+                .content("{\"phone\":\"13900000012\",\"password\":\"WrongPass\"}"))
+            .andExpect(status().isUnauthorized());
+
+        assertThat(staffRepository.findById(staff.getId()).orElseThrow().getFailedLoginCount())
+            .isEqualTo(1);
+    }
+
+    @Test
     void passwordChangeVerifiesOldPasswordAndPersistsNewHash() throws Exception {
         StaffEntity staff = saveStaff("13900000003", "OldPass1", "ACTIVE");
         String token = jwtService.issueStaff(staff.getId(), java.util.List.of("ADMIN"));

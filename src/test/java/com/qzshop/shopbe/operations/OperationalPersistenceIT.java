@@ -144,10 +144,10 @@ class OperationalPersistenceIT {
                 "categoryName", "白条鹅",
                 "quantity", 2,
                 "weight", 15.0,
-                "unitPrice", 22,
+                "unitPrice", 0.01,
                 "processMethod", "ALIVE",
                 "processFee", 0,
-                "subtotal", 330);
+                "subtotal", 0.01);
 
         Map<String, Object> sale = controller.createOrder(Map.of(
                 "storeId", 1,
@@ -155,6 +155,8 @@ class OperationalPersistenceIT {
                 "items", List.of(item)));
 
         assertThat(sale.get("code")).isEqualTo(200);
+        Map<String, Object> storedSale = data(sale);
+        assertThat(storedSale.get("totalAmount")).isEqualTo(330.0);
         assertThat(findInventory(number(inventory.get("id"))).get("quantity")).isEqualTo(1);
 
         Map<String, Object> rejected = controller.createOrder(Map.of(

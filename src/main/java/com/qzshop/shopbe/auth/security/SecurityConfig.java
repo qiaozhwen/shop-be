@@ -90,6 +90,22 @@ public class SecurityConfig {
             .exceptionHandling(e -> e.authenticationEntryPoint(entryPoint).accessDeniedHandler(deniedHandler))
             .authorizeHttpRequests(a -> a
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/staff/**", "/api/stores/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/staff/**", "/api/stores/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/staff/**", "/api/stores/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/sales-orders/**", "/api/members/**")
+                    .hasAnyRole("ADMIN", "MANAGER", "CASHIER")
+                .requestMatchers(HttpMethod.PUT, "/api/sales-orders/**", "/api/members/**")
+                    .hasAnyRole("ADMIN", "MANAGER", "CASHIER")
+                .requestMatchers(HttpMethod.POST, "/api/processing-tasks/**", "/api/losses/**")
+                    .hasAnyRole("ADMIN", "MANAGER", "BUTCHER")
+                .requestMatchers(HttpMethod.POST, "/api/poultry-categories/**", "/api/inventory/**",
+                        "/api/suppliers/**", "/api/purchases/**").hasAnyRole("ADMIN", "MANAGER")
+                .requestMatchers(HttpMethod.PUT, "/api/poultry-categories/**", "/api/inventory/**",
+                        "/api/suppliers/**", "/api/purchases/**", "/api/pricing/**").hasAnyRole("ADMIN", "MANAGER")
+                .requestMatchers(HttpMethod.DELETE, "/api/poultry-categories/**", "/api/inventory/**",
+                        "/api/suppliers/**", "/api/purchases/**").hasAnyRole("ADMIN", "MANAGER")
+                .requestMatchers(HttpMethod.GET, "/api/**").hasAuthority("TYPE_STAFF")
                 .anyRequest().hasAuthority("TYPE_STAFF"));
         return http.build();
     }

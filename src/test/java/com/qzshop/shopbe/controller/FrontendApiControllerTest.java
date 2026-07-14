@@ -29,6 +29,7 @@ class FrontendApiControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.todaySales").exists())
+                .andExpect(jsonPath("$.data.lowStockCount").isNumber())
                 .andExpect(jsonPath("$.data.salesTrend", hasSize(7)))
                 .andExpect(jsonPath("$.data.categoryRanking").isArray())
                 .andExpect(jsonPath("$.data.stockByStore").isArray());
@@ -97,11 +98,12 @@ class FrontendApiControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.status").value("PAID"))
+                .andExpect(jsonPath("$.data.totalAmount").value(63.16))
                 .andExpect(jsonPath("$.data.items[0].id").exists());
 
-        mockMvc.perform(get("/api/processing-tasks?keyword=鲜禽品类&pageSize=50"))
+        mockMvc.perform(get("/api/processing-tasks?keyword=三黄鸡&pageSize=50"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.total").value(1));
+                .andExpect(jsonPath("$.data.total").value(2));
     }
 
     @Test
@@ -173,9 +175,11 @@ class FrontendApiControllerTest {
 
         mockMvc.perform(post("/api/suppliers")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"测试供应商\",\"contact\":\"王总\",\"phone\":\"13900009999\",\"enabled\":true}"))
+                        .content("{\"name\":\"测试供应商\",\"contact\":\"王总\",\"phone\":\"13900009999\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.name").value("测试供应商"));
+                .andExpect(jsonPath("$.data.name").value("测试供应商"))
+                .andExpect(jsonPath("$.data.level").value("C"))
+                .andExpect(jsonPath("$.data.enabled").value(true));
 
         mockMvc.perform(put("/api/suppliers/1002")
                         .contentType(MediaType.APPLICATION_JSON)

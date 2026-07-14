@@ -15,6 +15,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +31,7 @@ import com.qzshop.shopbe.auth.staff.StaffEntity;
 import com.qzshop.shopbe.auth.staff.StaffRepository;
 import com.qzshop.shopbe.dao.StoreRepository;
 import com.qzshop.shopbe.operations.OperationalStateService;
+import com.qzshop.shopbe.operations.LegacyOperationalStateMigrator;
 
 @RestController
 @RequestMapping("/api")
@@ -64,17 +66,33 @@ public class FrontendApiController {
         seed();
     }
 
-    @Autowired
     public FrontendApiController(OperationalStateService stateStore,
                                  StaffRepository staffRepository,
                                  PasswordEncoder passwordEncoder,
                                  StoreRepository storeRepository) {
+        this(stateStore, staffRepository, passwordEncoder, storeRepository, null, false);
+    }
+
+    @Autowired
+    public FrontendApiController(OperationalStateService stateStore,
+                                 StaffRepository staffRepository,
+                                 PasswordEncoder passwordEncoder,
+                                 StoreRepository storeRepository,
+                                 LegacyOperationalStateMigrator legacyMigrator,
+                                 @Value("${shop.operational.seed-demo:false}") boolean seedDemo) {
         this.stateStore = stateStore;
         this.staffRepository = staffRepository;
         this.passwordEncoder = passwordEncoder;
         this.storeRepository = storeRepository;
         stateStore.load().ifPresentOrElse(this::restore, () -> {
-            seed();
+            var legacyState = legacyMigrator == null
+                    ? java.util.Optional.<OperationalStateService.State>empty()
+                    : legacyMigrator.migrate();
+            if (legacyState.isPresent()) {
+                restore(legacyState.orElseThrow());
+            } else if (seedDemo) {
+                seed();
+            }
             persist();
         });
     }
@@ -93,6 +111,11 @@ public class FrontendApiController {
         int loss = losses.stream()
                 .filter(item -> text(item.get("occurredAt")).startsWith(today))
                 .mapToInt(item -> number(item.get("quantity")).intValue()).sum();
+        long lowStock = inventory.stream()
+                .filter(item -> number(item.get("quantity")).intValue() < 20)
+                .map(item -> number(item.get("categoryId")).longValue())
+                .distinct()
+                .count();
         long pending = processingTasks.stream()
                 .filter(task -> !List.of("DELIVERED", "CANCELED").contains(text(task.get("status"))))
                 .count();
@@ -130,6 +153,7 @@ public class FrontendApiController {
                 "todayOrders", todayOrders.size(),
                 "poultryStock", stock,
                 "todayLoss", loss,
+                "lowStockCount", lowStock,
                 "processingPending", pending,
                 "memberCount", members.size(),
                 "storeCount", storeRepository == null ? 4 : storeRepository.findByStatusNot("CLOSED").size(),
@@ -156,6 +180,15 @@ public class FrontendApiController {
         Map<String, Object> item = copy(body);
         item.put("id", ids.incrementAndGet());
         categories.add(0, item);
+        pricing.add(0, item(
+                "id", item.get("id"),
+                "categoryId", item.get("id"),
+                "categoryName", item.get("name"),
+                "storeId", 0,
+                "storeName", "全部门店",
+                "date", LocalDateTime.now().format(DATE),
+                "price", number(item.get("basePrice")).doubleValue(),
+                "processingFee", number(item.get("processingFee")).doubleValue()));
         persist();
         return ok(item);
     }
@@ -239,12 +272,45 @@ public class FrontendApiController {
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> items = (List<Map<String, Object>>) body.getOrDefault("items", List.of());
         if (items.isEmpty()) return fail(400, "订单明细不能为空");
-        double total = items.stream().mapToDouble(item -> number(item.get("subtotal")).doubleValue()).sum();
-        double discount = number(body.getOrDefault("discount", 0)).doubleValue();
         long storeId = number(body.getOrDefault("storeId", 1)).longValue();
+        List<Map<String, Object>> pricedItems = new ArrayList<>();
+        for (Map<String, Object> requestedItem : items) {
+            long categoryId = number(requestedItem.get("categoryId")).longValue();
+            Map<String, Object> category = find(categories, categoryId);
+            if (category == null || Boolean.FALSE.equals(category.get("enabled"))) {
+                return fail(400, "销售品类不存在或已停用");
+            }
+            int quantity = number(requestedItem.get("quantity")).intValue();
+            double weight = number(requestedItem.get("weight")).doubleValue();
+            if (quantity <= 0 || ("JIN".equals(text(category.get("unit"))) && weight <= 0)) {
+                return fail(400, "销售数量和重量必须大于零");
+            }
+            Map<String, Object> price = pricing.stream()
+                    .filter(row -> number(row.get("categoryId")).longValue() == categoryId)
+                    .filter(row -> number(row.get("storeId")).longValue() == storeId)
+                    .findFirst()
+                    .orElseGet(() -> pricing.stream()
+                            .filter(row -> number(row.get("categoryId")).longValue() == categoryId)
+                            .filter(row -> number(row.get("storeId")).longValue() == 0)
+                            .findFirst().orElse(null));
+            double unitPrice = number(price == null ? category.get("basePrice") : price.get("price")).doubleValue();
+            String method = text(requestedItem.getOrDefault("processMethod", "ALIVE"));
+            double processingFee = "ALIVE".equals(method) ? 0
+                    : number(price == null ? category.get("processingFee") : price.get("processingFee")).doubleValue();
+            double goodsAmount = "PIECE".equals(text(category.get("unit")))
+                    ? quantity * unitPrice : weight * unitPrice;
+            Map<String, Object> priced = copy(requestedItem);
+            priced.put("categoryName", category.get("name"));
+            priced.put("unitPrice", round(unitPrice));
+            priced.put("processFee", round(processingFee * quantity));
+            priced.put("subtotal", round(goodsAmount + processingFee * quantity));
+            pricedItems.add(priced);
+        }
+        double total = pricedItems.stream().mapToDouble(item -> number(item.get("subtotal")).doubleValue()).sum();
+        double discount = number(body.getOrDefault("discount", 0)).doubleValue();
         if (discount < 0 || discount > total) return fail(400, "优惠金额无效");
         Map<Long, Integer> requested = new HashMap<>();
-        for (Map<String, Object> orderItem : items) {
+        for (Map<String, Object> orderItem : pricedItems) {
             int quantity = number(orderItem.get("quantity")).intValue();
             if (quantity <= 0) return fail(400, "销售数量必须大于零");
             requested.merge(number(orderItem.get("categoryId")).longValue(), quantity, Integer::sum);
@@ -263,7 +329,7 @@ public class FrontendApiController {
                 "orderNo", "SO" + System.currentTimeMillis(),
                 "storeId", storeId,
                 "storeName", storeName(storeId),
-                "items", withIds(items),
+                "items", withIds(pricedItems),
                 "totalAmount", round(total),
                 "discount", round(discount),
                 "payable", round(total - discount),
@@ -275,7 +341,7 @@ public class FrontendApiController {
                 "paidAt", body.get("payMethod") == null ? null : now(),
                 "remark", body.get("remark"));
         orders.add(0, order);
-        for (Map<String, Object> orderItem : items) {
+        for (Map<String, Object> orderItem : pricedItems) {
             if (!"ALIVE".equals(orderItem.get("processMethod"))) {
                 processingTasks.add(0, item(
                         "id", ids.incrementAndGet(),
@@ -326,6 +392,11 @@ public class FrontendApiController {
         if (params.containsKey("status")) {
             list = list.stream().filter(task -> params.get("status").equals(task.get("status"))).toList();
         }
+        if (Boolean.parseBoolean(params.getOrDefault("active", "false"))) {
+            list = list.stream()
+                    .filter(task -> !List.of("DELIVERED", "CANCELED").contains(text(task.get("status"))))
+                    .toList();
+        }
         return ok(page(filter(list, params.get("keyword"), "taskNo", "orderNo", "workerName", "categoryName"), params));
     }
 
@@ -363,6 +434,8 @@ public class FrontendApiController {
     public synchronized Map<String, Object> createSupplier(@RequestBody Map<String, Object> body) {
         Map<String, Object> item = copy(body);
         item.put("id", ids.incrementAndGet());
+        item.putIfAbsent("level", "C");
+        item.putIfAbsent("enabled", true);
         suppliers.add(0, item);
         persist();
         return ok(item);
@@ -576,6 +649,16 @@ public class FrontendApiController {
     }
 
     private void restore(OperationalStateService.State state) {
+        categories.clear();
+        inventory.clear();
+        orders.clear();
+        processingTasks.clear();
+        suppliers.clear();
+        purchases.clear();
+        losses.clear();
+        members.clear();
+        staff.clear();
+        pricing.clear();
         ids.set(state.nextId());
         categories.addAll(state.categories());
         inventory.addAll(state.inventory());
@@ -591,18 +674,14 @@ public class FrontendApiController {
 
     private void persist() {
         if (stateStore == null) return;
-        stateStore.save(new OperationalStateService.State(
-                ids.get(),
-                categories,
-                inventory,
-                orders,
-                processingTasks,
-                suppliers,
-                purchases,
-                losses,
-                members,
-                staff,
-                pricing));
+        try {
+            stateStore.save(new OperationalStateService.State(
+                    ids.get(), categories, inventory, orders, processingTasks,
+                    suppliers, purchases, losses, members, staff, pricing));
+        } catch (RuntimeException ex) {
+            stateStore.load().ifPresent(this::restore);
+            throw ex;
+        }
     }
 
     private Map<String, Object> staffView(StaffEntity entity) {

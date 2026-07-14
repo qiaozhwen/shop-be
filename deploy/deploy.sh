@@ -48,8 +48,27 @@ docker run -d \
   -e DB_USERNAME="${DB_USERNAME:?DB_USERNAME required}" \
   -e DB_PASSWORD="${DB_PASSWORD:?DB_PASSWORD required}" \
   -e AUTH_JWT_SECRET="${AUTH_JWT_SECRET:?AUTH_JWT_SECRET required}" \
+  -e BOOTSTRAP_ADMIN_PHONE="${BOOTSTRAP_ADMIN_PHONE:-}" \
+  -e BOOTSTRAP_ADMIN_PASSWORD="${BOOTSTRAP_ADMIN_PASSWORD:-}" \
+  -e BOOTSTRAP_ADMIN_NAME="${BOOTSTRAP_ADMIN_NAME:-系统管理员}" \
+  -e BOOTSTRAP_ADMIN_STORE_ID="${BOOTSTRAP_ADMIN_STORE_ID:-1}" \
   -e SPRING_PROFILES_ACTIVE=prod \
   "${IMAGE}"
+
+echo "==> 等待容器健康检查"
+for _ in $(seq 1 45); do
+  STATUS="$(docker inspect -f '{{.State.Health.Status}}' "${CONTAINER_NAME}" 2>/dev/null || true)"
+  [[ "${STATUS}" == "healthy" ]] && break
+  if [[ "${STATUS}" == "unhealthy" ]]; then
+    docker logs "${CONTAINER_NAME}"
+    exit 1
+  fi
+  sleep 2
+done
+[[ "$(docker inspect -f '{{.State.Health.Status}}' "${CONTAINER_NAME}")" == "healthy" ]] || {
+  docker logs "${CONTAINER_NAME}"
+  exit 1
+}
 
 echo "==> 清理悬挂镜像"
 docker image prune -f

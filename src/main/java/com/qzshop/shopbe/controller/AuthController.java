@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.qzshop.shopbe.auth.staff.LoginAttemptService;
 import com.qzshop.shopbe.auth.staff.StaffEntity;
@@ -51,8 +52,9 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Transactional(noRollbackFor = { LoginFailedException.class, StaffLockedException.class })
     public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest req) {
-        StaffEntity staff = staffRepo.findByPhone(req.getPhone()).orElse(null);
+        StaffEntity staff = staffRepo.findByPhoneForUpdate(req.getPhone()).orElse(null);
 
         if (staff == null || !"ACTIVE".equals(staff.getStatus())) {
             passwordEncoder.matches(req.getPassword(), dummyPasswordHash);
@@ -83,6 +85,7 @@ public class AuthController {
     }
 
     @PostMapping("/set-password")
+    @Transactional
     public ResponseEntity<Void> setPassword(@RequestBody Map<String, Object> body) {
         StaffPrincipal principal = currentPrincipal();
         if (principal == null) {
@@ -94,7 +97,7 @@ public class AuthController {
             return ResponseEntity.badRequest().build();
         }
 
-        StaffEntity staff = staffRepo.findById(principal.staffId()).orElse(null);
+        StaffEntity staff = staffRepo.findByIdForUpdate(principal.staffId()).orElse(null);
         if (staff == null || !"ACTIVE".equals(staff.getStatus())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }

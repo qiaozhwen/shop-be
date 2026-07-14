@@ -13,6 +13,10 @@ public interface StaffRepository extends JpaRepository<StaffEntity, Long> {
     Optional<StaffEntity> findByPhone(String phone);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select s from StaffEntity s where s.phone = :phone")
+    Optional<StaffEntity> findByPhoneForUpdate(@Param("phone") String phone);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from StaffEntity s where s.id = :id")
     Optional<StaffEntity> findByIdForUpdate(@Param("id") Long id);
 }

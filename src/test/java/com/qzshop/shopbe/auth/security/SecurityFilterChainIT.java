@@ -2,6 +2,7 @@ package com.qzshop.shopbe.auth.security;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -13,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.http.MediaType;
 import org.springframework.web.context.WebApplicationContext;
 
 import com.qzshop.shopbe.auth.token.JwtService;
@@ -55,6 +57,46 @@ class SecurityFilterChainIT {
         StaffEntity staff = saveStaff("ACTIVE");
         String token = jwt.issueStaff(staff.getId(), java.util.List.of("STAFF_DEFAULT"));
         mvc().perform(get("/api/stores").header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void cashierCannotMutateInventoryButCanCreateSale() throws Exception {
+        StaffEntity staff = saveStaff("ACTIVE");
+        staff.setRole("CASHIER");
+        staffRepository.saveAndFlush(staff);
+        String token = jwt.issueStaff(staff.getId(), java.util.List.of("CASHIER"));
+
+        mvc().perform(post("/api/inventory")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"storeId\":1,\"categoryId\":11,\"quantity\":1,\"avgWeight\":1}"))
+            .andExpect(status().isForbidden());
+
+        mvc().perform(post("/api/sales-orders")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"storeId":1,"payMethod":"CASH","items":[{
+                          "categoryId":11,"quantity":1,"weight":1,
+                          "unitPrice":0.01,"subtotal":0.01,"processMethod":"ALIVE"
+                        }]}
+                        """))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.totalAmount").value(18.8));
+    }
+
+    @Test
+    void managerCanMutateInventory() throws Exception {
+        StaffEntity staff = saveStaff("ACTIVE");
+        staff.setRole("MANAGER");
+        staffRepository.saveAndFlush(staff);
+        String token = jwt.issueStaff(staff.getId(), java.util.List.of("MANAGER"));
+
+        mvc().perform(post("/api/inventory")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"storeId\":1,\"categoryId\":11,\"quantity\":1,\"avgWeight\":1}"))
             .andExpect(status().isOk());
     }
 
