@@ -36,11 +36,13 @@ docker pull "${IMAGE}"
 echo "==> 停止并移除旧容器 ${CONTAINER_NAME} (若存在)"
 docker rm -f "${CONTAINER_NAME}" 2>/dev/null || true
 
+docker network inspect shop-network >/dev/null 2>&1 || docker network create shop-network
+
 echo "==> 启动新容器"
 docker run -d \
   --name "${CONTAINER_NAME}" \
   --restart unless-stopped \
-  --network shop-net \
+  --network shop-network \
   -p "${HOST_PORT}:8080" \
   -e DB_URL="${DB_URL:?DB_URL required}" \
   -e DB_USERNAME="${DB_USERNAME:?DB_USERNAME required}" \
