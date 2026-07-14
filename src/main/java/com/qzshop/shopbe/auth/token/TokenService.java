@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.qzshop.shopbe.auth.AuthProperties;
+import com.qzshop.shopbe.auth.staff.StaffRepository;
 
 @Service
 public class TokenService {
@@ -24,11 +25,16 @@ public class TokenService {
     private final RefreshTokenRepository repo;
     private final JwtService jwt;
     private final AuthProperties props;
+    private final StaffRepository staffRepository;
 
-    public TokenService(RefreshTokenRepository repo, JwtService jwt, AuthProperties props) {
+    public TokenService(RefreshTokenRepository repo,
+                        JwtService jwt,
+                        AuthProperties props,
+                        StaffRepository staffRepository) {
         this.repo = repo;
         this.jwt = jwt;
         this.props = props;
+        this.staffRepository = staffRepository;
     }
 
     @Transactional
@@ -56,7 +62,13 @@ public class TokenService {
 
     @Transactional(noRollbackFor = TokenReplayException.class)
     public TokenIssueResult rotate(String refreshToken, LongFunction<List<String>> rolesResolver) {
-        Optional<RefreshTokenEntity> opt = repo.findByTokenHashForUpdate(hash(refreshToken));
+        String tokenHash = hash(refreshToken);
+        Optional<Long> subjectId = repo.findSubjectIdByTokenHash(tokenHash);
+        if (subjectId.isEmpty()) {
+            throw new TokenReplayException("refresh token not found");
+        }
+        lockStaff(subjectId.get());
+        Optional<RefreshTokenEntity> opt = repo.findByTokenHashForUpdate(tokenHash);
         if (opt.isEmpty()) {
             throw new TokenReplayException("refresh token not found");
         }
@@ -76,15 +88,27 @@ public class TokenService {
 
     @Transactional
     public int revokeAllForStaff(long staffId) {
+        if (staffRepository.findByIdForUpdate(staffId).isEmpty()) {
+            return 0;
+        }
         return repo.revokeAllActive(SUBJECT_STAFF, staffId);
     }
 
     @Transactional
     public boolean revokeOne(String refreshToken) {
-        Optional<RefreshTokenEntity> opt = repo.findByTokenHash(hash(refreshToken));
+        String tokenHash = hash(refreshToken);
+        Optional<Long> subjectId = repo.findSubjectIdByTokenHash(tokenHash);
+        if (subjectId.isEmpty()) return false;
+        lockStaff(subjectId.get());
+        Optional<RefreshTokenEntity> opt = repo.findByTokenHashForUpdate(tokenHash);
         if (opt.isEmpty() || opt.get().getRevokedAt() != null) return false;
         opt.get().setRevokedAt(LocalDateTime.now());
         return true;
+    }
+
+    private void lockStaff(long staffId) {
+        staffRepository.findByIdForUpdate(staffId)
+                .orElseThrow(() -> new TokenReplayException("refresh token subject not found"));
     }
 
     private static String newRefresh() {

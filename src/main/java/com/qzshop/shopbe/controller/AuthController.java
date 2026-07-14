@@ -61,7 +61,11 @@ public class AuthController {
 
         loginAttempt.ensureNotLocked(staff);
 
-        if (!passwordEncoder.matches(req.getPassword(), staff.getPassword())) {
+        String passwordHash = staff.getPassword();
+        if (passwordHash == null || passwordHash.isBlank()) {
+            passwordHash = dummyPasswordHash;
+        }
+        if (!passwordEncoder.matches(req.getPassword(), passwordHash)) {
             loginAttempt.recordFailure(staff.getId());
             throw new LoginFailedException("invalid credentials");
         }
