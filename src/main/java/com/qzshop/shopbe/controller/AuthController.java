@@ -31,7 +31,7 @@ import com.qzshop.shopbe.dto.LoginResponse;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/admin/auth")
+@RequestMapping({"/api/admin/auth", "/api/auth"})
 public class AuthController {
 
     private final StaffRepository staffRepo;

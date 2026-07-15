@@ -36,7 +36,9 @@ class BootstrapAdminInitializerTest {
             StaffEntity admin = staffRepository.findByPhone(PHONE).orElseThrow();
 
             assertThat(admin.getPassword()).isEqualTo(originalHash);
-            assertThat(staffRepository.findAll()).hasSize(1);
+            assertThat(staffRepository.findAll())
+                    .filteredOn(staff -> PHONE.equals(staff.getPhone()))
+                    .hasSize(1);
         }
     }
 

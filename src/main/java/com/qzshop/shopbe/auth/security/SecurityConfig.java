@@ -54,7 +54,7 @@ public class SecurityConfig {
     @Bean @Order(1)
     SecurityFilterChain publicChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/api/auth/refresh", "/api/admin/auth/login",
+            .securityMatcher("/api/auth/login", "/api/auth/refresh", "/api/admin/auth/login",
                              "/api/admin/auth/sms/**", "/api/admin/auth/sso/**",
                              "/api/admin/auth/reset-password", "/api/admin/auth/bind-phone")
             .cors(c -> c.configurationSource(corsConfigurationSource()))

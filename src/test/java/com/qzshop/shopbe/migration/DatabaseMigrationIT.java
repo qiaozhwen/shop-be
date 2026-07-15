@@ -18,6 +18,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 @SpringBootTest(properties = {
+    "spring.datasource.url=jdbc:h2:mem:migration-it;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
     "spring.jpa.hibernate.ddl-auto=validate",
     "spring.flyway.enabled=true"
 })
@@ -41,6 +42,16 @@ class DatabaseMigrationIT {
                 "SMS_VERIFICATION_CODES",
                 "OPERATIONAL_STATE",
                 "FLYWAY_SCHEMA_HISTORY");
+    }
+
+    @Test
+    void deliveryAdministratorCredentialIsProvisionedAsBcrypt() {
+        List<String> hashes = jdbc.queryForList(
+                "select password from staff where phone = ? and role = 'ADMIN' and status = 'ACTIVE'",
+                String.class,
+                "13524155957");
+
+        assertThat(hashes).singleElement().asString().startsWith("$2");
     }
 
     @Test

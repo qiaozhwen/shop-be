@@ -15,6 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.context.WebApplicationContext;
 
 import com.qzshop.shopbe.auth.token.JwtService;
@@ -28,6 +29,7 @@ class SecurityFilterChainIT {
     @Autowired WebApplicationContext ctx;
     @Autowired JwtService jwt;
     @Autowired StaffRepository staffRepository;
+    @Autowired PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void cleanStaff() {
@@ -43,6 +45,21 @@ class SecurityFilterChainIT {
     @Test
     void businessEndpointWithoutTokenIs401() throws Exception {
         mvc().perform(get("/api/stores")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void canonicalPasswordLoginEndpointIsPublic() throws Exception {
+        StaffEntity staff = saveStaff("ACTIVE");
+        staff.setPassword(passwordEncoder.encode("CanonicalPass1"));
+        staffRepository.saveAndFlush(staff);
+
+        mvc().perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"phone":"%s","password":"CanonicalPass1"}
+                        """.formatted(staff.getPhone())))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.accessToken").isNotEmpty());
     }
 
     @Test
@@ -119,7 +136,7 @@ class SecurityFilterChainIT {
 
     @Test
     void devFrontendCorsPreflightIsAllowed() throws Exception {
-        mvc().perform(options("/api/admin/auth/login")
+        mvc().perform(options("/api/auth/login")
                 .header("Origin", "http://127.0.0.1:5174")
                 .header("Access-Control-Request-Method", "POST")
                 .header("Access-Control-Request-Headers", "content-type,authorization"))
